@@ -1,0 +1,60 @@
+<com.google.android.flexbox.FlexboxLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/flexbox_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:flexDirection="column">
+    
+    
+    <com.github.lzyzsd.jsbridge.BridgeWebView
+        android:id="@+id/webview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimaryDark">
+    
+    </com.github.lzyzsd.jsbridge.BridgeWebView>
+    
+    <com.google.android.flexbox.FlexboxLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#eeeeee"
+        app:flexDirection="row"
+        app:justifyContent="space_around">
+        
+        <com.google.android.flexbox.FlexboxLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:background="#FFFFFF"
+            android:theme="@android:style/Theme.Translucent"
+            app:alignItems="center"
+            app:flexDirection="row"
+            app:flexWrap="wrap"
+            app:justifyContent="space_around">
+            
+            <Button
+                android:id="@+id/goBack"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/back">
+            
+            </Button>
+            
+            <Button
+                android:id="@+id/reload"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/reload"></Button>
+            
+            <Button
+                android:id="@+id/goForward"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/forward"></Button>
+        
+        </com.google.android.flexbox.FlexboxLayout>
+    
+    </com.google.android.flexbox.FlexboxLayout>
+
+</com.google.android.flexbox.FlexboxLayout>

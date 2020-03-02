@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Test</title>
+  <style>
+  </style>
+</head>
+
+<body>
+  <p>
+    <a href="http://www.baidu.com">跳转百度</a>
+  </p>
+
+  <p id="bluestate" style="color:cornflowerblue">
+    蓝牙未连接
+  </p>
+  <button onclick="startDiscovery()">搜索附近蓝牙</button>
+  <button onclick="stopDiscovery()">停止扫描</button>
+  <span id="foundBLE"></span>
+  <div style="background-color: bisque;">
+    <p class="validate" id='text2'>待获取蓝牙列表区域...</p>
+    <div id="blelist">
+    </div>
+  </div>
+  <button onclick="cewen();">采集温度</button>
+  <p class="validate" id='text1'>等待接收温度数据...</p>
+  <br>
+  <p>
+    <button onclick="disconnectBLE()">断开当前连接</button>
+  </p>
+
+  <p>
+    <button onclick="remind_connected()">震动-connected</button>
+    <button onclick="remind_disconnected()">震动-disconnected</button>
+  </p>
+
+  <p>
+    <button onclick="sound_connected()">声效-connected</button>
+    <button onclick="sound_disconnected()">声效-disconnected</button>
+    <button onclick="sound_water()">声效-water</button>
+    <button onclick="sound_message()">声效-message</button>
+    <button onclick="sound_ququ()">声效-ququ</button>
+  </p>
+
+  <p>
+    <button onclick="getVersion()">获取版本</button>
+    <p id="version">待获取当前版本...</p>
+  </p>
+  <p>
+    <button onclick="saveData()">保存localstorage</button>
+  </p>
+  <p>
+    <button onclick="getData()">获取localstorage</button>
+  </p>
+
+
+</body>
+<script>
+  var text1 = document.getElementById('text1'),
+    text2 = document.getElementById('text2'),
+    temp = document.getElementById('temp'),
+    bluestate = document.getElementById('bluestate'),
+    version = document.getElementById('version'),
+    foundBLE = document.getElementById('foundBLE');
+  blelist = document.getElementById("blelist");
+
+  var currentAddress;
+
+  function getVersion() {
+    window.WebViewJavascriptBridge.callHandler('getVersion', null, res => {
+      version.innerHTML = '当前版本号:' + res;
+    });
+  }
+
+  function sound_connected() {
+    window.WebViewJavascriptBridge.callHandler('sound', "connected", null);
+  }
+
+  function sound_disconnected() {
+    window.WebViewJavascriptBridge.callHandler('sound', "disconnected", null);
+  }
+
+  function sound_water() {
+    window.WebViewJavascriptBridge.callHandler('sound', "water", null);
+  }
+
+  function sound_message() {
+    window.WebViewJavascriptBridge.callHandler('sound', "message", null);
+  }
+
+  function sound_ququ() {
+    window.WebViewJavascriptBridge.callHandler('sound', "ququ", null);
+  }
+
+  function remind_connected() {
+    window.WebViewJavascriptBridge.callHandler('remind', 1, null);
+  }
+
+  function remind_disconnected() {
+    window.WebViewJavascriptBridge.callHandler('remind', 0, null);
+  }
+
+  function saveData() {
+    localStorage.setItem("person", JSON.stringify({
+      name: "hhh",
+      sex: 1,
+      age: 222
+    }));
+  }
+
+  function getData() {
+    var person = localStorage.getItem("person");
+    alert("读取storage: " + person);
+  }
+
+  function startDiscovery() {
+    var params = {};
+    text2.innerHTML = "";
+    blelist.innerHTML = "";
+    window.WebViewJavascriptBridge.callHandler('startDiscovery', null, null);
+  }
+
+  function stopDiscovery() {
+    // var params = {};
+    // text2.innerHTML = "";
+    // blelist.innerHTML = "";
+    window.WebViewJavascriptBridge.callHandler('stopDiscovery', null, null);
+  }
+
+  function cewen() {
+    var params = {};
+    window.WebViewJavascriptBridge.callHandler('cewen', params, res => {
+      res = JSON.parse(res);
+      // {"state":1,"temp":["1582863298015@28.9","1582863298015@28.9","1582863300015@28.9","1582863300015@28.9","1582863302008@28.8","1582863302008@28.8"]}
+      if (res.state && res.temp) {
+        text1.innerHTML = "";
+        var tempArr = Array.from(res.temp);
+        // alert('tempArr.length:' + tempArr.length);
+        for (var i = 0; i < tempArr.length; i++) {
+          // 时间戳@温度
+          var a = tempArr[i].split("@");
+          var d = new Date(parseInt(a[0]));
+          var time = formatDate(d, 'yyyy-MM-dd hh:mm:ss');
+          var temp = a[1] + "°C"
+          var t = time + " " + temp;
+          var pEle = document.createElement('p');
+          pEle.innerHTML = t;
+          text1.appendChild(pEle);
+        }
+      } else {
+        bluestate.innerHTML = "未选择蓝牙连接";
+      }
+    })
+  }
+
+  function connectBLE(device) {
+    setTimeout(() => {
+      window.WebViewJavascriptBridge.callHandler('connectBLE', device, null);
+    }, 3000);
+  }
+
+  function disconnectBLE() {
+    window.WebViewJavascriptBridge.callHandler('disconnectBLE', null, null);
+  }
+
+  //JS注册事件监听
+  function connectJSBridge(callback) {
+    if (window.WebViewJavascriptBridge) {
+      callback(WebViewJavascriptBridge)
+    } else {
+      document.addEventListener(
+        'WebViewJavascriptBridgeReady',
+        function () {
+          callback(WebViewJavascriptBridge)
+        },
+        false
+      );
+    }
+  }
+
+  //注册回调函数，第一次连接时调用 初始化函数
+  connectJSBridge(function (bridge) {
+    //初始化
+    bridge.init(function (data, responseCallback) {
+      responseCallback(data);
+    });
+    bridge.registerHandler("onBLENotify", function (res, callBack) {
+      // 数据格式 --- {type:"FORMAT_XXX",data:"xxxxx"};
+      // private String FORMAT_CONNECTED = "FORMAT_CONNECTED";
+      // private String FORMAT_DISCONNECTED = "FORMAT_DISCONNECTED";
+      // private String FORMAT_FOUND_DEVICE = "FORMAT_FOUND_DEVICE";
+      // private String FORMAT_SCAN_START = "FORMAT_SCAN_START";
+      // private String FORMAT_SCAN_FINISH = "FORMAT_SCAN_FINISH";
+
+      // private int STATE_CONNECTED = 1;
+      // private int STATE_DISCONNECTED = 0;
+      // if (data) {
+      //   data = JSON.parse(data);
+      // }
+      if (!res) return;
+      res = JSON.parse(res);
+      var type = res["type"];
+      var data = res["data"];
+
+      switch (type) {
+        case "FORMAT_SCAN_START": //开始扫描蓝牙 {"type:"FORMAT_SCAN_START",data:"开始扫描"}
+          foundBLE.innerHTML = data;
+          break;
+        case "FORMAT_SCAN_FINISH": //扫描蓝牙结束 {"type:"FORMAT_SCAN_FINISH",data:"扫描结束"}
+          foundBLE.innerHTML = data;
+          break;
+        case "FORMAT_FOUND_DEVICE": //发现设备 {"type":"FORMAT_CONNECTED",data:{"address":"61:28:E5:ED:20:AF","name":"TM_xx","status":0}};
+          //status = 0 连接失败;status = 1 连接成功
+          data = JSON.parse(data);
+
+          var p = document.createElement('p'),
+            a = document.createElement('a');
+          a.innerText = data["name"] + "&" + data["address"];
+          a.href = "#";
+          a.onclick = function () {
+            connectBLE(data["address"]);
+            currentAddress=data["address"];
+          };
+          p.appendChild(a);
+          blelist.append(p);
+          break;
+        case "FORMAT_CONNECTED":
+          if (!data) return;
+          data = JSON.parse(data);
+          var status = data["status"];
+          // status = status === 1 ? "断开连接" : "连接成功";
+          bluestate.innerHTML = data["name"] + ":" + status;
+          sound_connected();
+          break;
+        case "FORMAT_DISCONNECTED":
+          data = JSON.parse(data);
+          var status = data["status"];
+          // status = status === 0 ? "断开连接" : "连接成功";
+          bluestate.innerHTML = data["name"] + ":" + status
+          sound_disconnected();
+          //是否发起自动重新连接
+          // connectBLE(currentAddress);
+        default:
+          break;
+
+      }
+
+      // data = data.split("@");
+      // var type = data[0];
+      // data = data[1];
+      // if (type === 'FORMAT_FOUND_DEVICE') {
+      //   var p = document.createElement('p'),
+      //     a = document.createElement('a');
+      //   a.innerText = data;
+      //   a.href = "#";
+      //   a.onclick = function () {
+      //     connectBLE(this.innerText);
+      //   };
+      //   p.appendChild(a);
+      //   blelist.append(p);
+      // } else if (
+      //   type ===
+      //   'FORMAT_DISCONNECTED' || type === 'FORMAT_CONNECTED') {
+      //   bluestate.innerHTML = data;
+      // } else if (type === 'FORMAT_SCAN_START' || type === 'FORMAT_SCAN_FINISH') {
+      //   foundBLE.innerHTML = data
+      // }
+    });
+  })
+
+  function formatDate(date, fmt) {
+    let o = {
+      'M+': date.getMonth() + 1, //月份
+      'd+': date.getDate(), //日
+      'h+': date.getHours(), //小时
+      'm+': date.getMinutes(), //分  
+      's+': date.getSeconds(), //秒
+      "q+": Math.floor((date.getMonth() + 3) / 3), //季度   
+      "S": date.getMilliseconds() //毫秒   
+    };
+    if (/(y+)/.test(fmt)) { //年份
+      fmt = fmt.replace(RegExp.$1, (date.getFullYear() + '').substr(4 - RegExp.$1.length));
+    }
+    for (let k in o) {
+      if (new RegExp("(" + k + ")").test(fmt)) {
+        let str = o[k] + '';
+        fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? str : padLeftZero(str));
+      }
+    }
+    return fmt;
+  };
+
+  function padLeftZero(str) {
+    return ('00' + str).substr(str.length);
+  }
+</script>
+
+</html>
